@@ -1,0 +1,36 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{fullpage}
+\usepackage[normalem]{ulem}
+\usepackage{fancyhdr,graphicx,amsmath,amssymb, mathtools, scrextend, titlesec, enumitem}
+
+
+
+
+\title{IP formulation of Sudoku Puzzle}
+\begin{document}
+
+	\section{Assumption}
+	This Integer Programming formulation is designed specifically for Sudoku puzzle of size 9*9. However, theoretically any Sudoku puzzle of size n by n is solvable with this model. 
+	
+	\section{IP formulation}
+	Suppose that i represents the order of rows and j represents the order of columns. k is a possible value of an entry in the puzzle that is in the range from 1 to 9. The formulation is as follows: 
+	\linebreak\linebreak
+	\centering{$x_{ijk} = 
+				\begin{cases}
+					1 & \text{if ith row, jth column element is k}\\
+					0 & \text{otherwise} 
+				\end{cases}$
+	\linebreak\linebreak
+	\centering{G = set of all known entries of the puzzle}
+	\linebreak\linebreak
+	\centering{$\sum_{i} x_{ijk} = 1$ for $j = 1, ... , 9$, for $k = 1, ..., 9$}
+	\linebreak\linebreak
+	\centering{$\sum_{j} x_{ijk} = 1$ for $i = 1, ... , 9$, for $k = 1, ..., 9$}
+	\linebreak\linebreak
+	\centering{$\sum_{k} x_{ijk} = 1$ for $i = 1, ..., 9$, for $j = 1, ... , 9$}
+	\linebreak\linebreak
+	\centering{$\sum_{p}^{p+2} \sum_{q}^{q+2} x_{pqk} = 1$, for $p = 3i-2$, $q = 3j-2$, for $i, j = 1, 2, 3$}
+	
+
+\end{document}
