@@ -1,7 +1,15 @@
+from collections import defaultdict
+from copy import deepcopy
+import sys
+import time
+
 ## Each input grid will be a string of values from the puzzle 
 ## where empty entries will be 0 
 
 grid = "000260701680070090190004500820100040004602900050003028009300074040050036703018000"
+# grid1="100489006730000040000001295007120600500703008006095700914600000020000037800512004"
+# grid2="020608000580009700000040000370000500600000004008000013000020000009800036000306090"
+# grid3="090700006010004000000068003407000900000006052000001008260400000300620080008007000"
 
 def change_grid(puzzle):
 	"""
@@ -10,11 +18,15 @@ def change_grid(puzzle):
 	"""
 	grid = []
 	for i in range(0, 9):
-		grid.append([int(j) for j in list(puzzle[i*9:i*9+10])])
+		grid.append([int(j) for j in list(puzzle[i*9:i*9+9])])
 	return grid 
 
-grid = change_grid(grid)
-# print grid
+def visualize(grid):
+	"""
+	Visualize the grid into easily readable format
+	"""
+	print('\n'.join([''.join(['{:4}'.format(item) for item in row]) for row in grid]))
+
 def is_empty(grid, i, j):
 	"""
 	Determine if any of entries following row i and column j is empty. In other words,
@@ -28,62 +40,78 @@ def is_empty(grid, i, j):
 	for row in range(0, 9):
 		for col in range(0, 9):
 			if grid[row][col] == 0:
-				return row,col
+				return row, col
 
 	return -1, -1
 
-
-
-def entry_val(grid):
+def candidate(grid):
 	"""
-	Given a grid, represented as a string, determine 
-	all possible candidates for the entries and write it in
-	a string format. The output will be a dictionary that maps
-	each entry to all its possible values
+	Given the grid, determine all feasible candidates for 
+	every entries. Return a dictionary {entries : possible candidates} 
 	"""
-	digits = '123456789'
-	values = []
-	for i in range(len(grid)):
-		if grid[i] == '0':
-			values.append(digits)
-		else:
-			values.append(grid[i])
-	return dict(zip(range(1, 82), values))
+	# candidate = defaultdict(lambda x:defaultdict())
+	candidate = {}
+	for i in range(0, 9):
+		col_entries = defaultdict(str)
+		for j in range(0, 9):
+			entry = ''
+			for k in range(1,10):
+				if (grid[i][j] == 0 and k not in grid[i] and k not in [grid[l][j] for l in range(0,9)] and 
+					k not in [grid[m][n] for m in range(int(i/3)*3, int(i/3)*3+3) for n in range(int(j/3)*3, int(j/3)*3+3)]):
+					entry += str(k)
+			if len(entry) == 1:
+				grid[i][j] = int(entry) ##if only one possible candidate for the entry, fill it up
+			elif len(entry)!=0:
+				col_entries[j] = entry
+		candidate[i] = col_entries 
+	return candidate	
 
-# for i in range(1,10): 
-	
-	# if i%9!=0: col_peers = [j if i!=9 else j+9 for j in range(i%9, (i%9)+81, 9) if j!=i]
-	# else: col_peers = [j+9 for j in range(i%9, (i%9)+81, 9) if j+9!=i]# print entry_val(grid)
-
-def peers(grid):
+def sudoku_solver(grid, a=0, b=0):
 	"""
-	Given a grid, determine peers of each entries for row, 
-	column, and square. Represent it in the form of a dictionary
-	{entry:[row_peers, col_peers, square_peers]}
+	Given the grid (sudoku puzzle), solve it using the idea of constraint propagation
+	and backtracking
 	"""
-	for i in range(1, len(grid)+1):
-		#constructing row_peers, col_peers, square_peers 
-		row_peers = [j if i%9!=0 else j-9 for j in range((i/9)*9+1, (i/9)*9+10)]
-		col_peers = [j if i%9!=0 else j+9 for j in range(i%9, (i%9)+81, 9)]
-		row_peers.remove(i), col_peers.remove(i), square_peers.remove(i)
+	i, j = is_empty(grid, a, b)
+	if i == -1 and j==-1:
+		visualize(grid)
+		return True	##sudoku solved!
+
+	else:
+		init = candidate(grid)
+		i, j = is_empty(grid, a, b)
+		if i==-1 and j==-1:
+			visualize(grid)
+			return True ## This part was added since candidate function changes the grid and thus need to check again
+		for k in init[i][j]:
+			if (int(k) not in grid[i] and int(k) not in [grid[l][j] for l in range(0,9)] and 
+				int(k) not in [grid[m][n] for m in range(int(i/3)*3, int(i/3)*3+3) for n in range(int(j/3)*3, int(j/3)*3+3)]):
+
+				c = 0
+				new_grid = deepcopy(grid)
+				new_grid[i][j] = int(k)
+
+				if b+1<9: b+=1; c+=1
+				else: a+=1; b=0; c-=1
+
+				if sudoku_solver(new_grid,a,b):
+					return True
+				else:
+					if c==1: b-=1
+					else: a-=1; b=8
+			else:
+				pass
+
+	return False
+
+if __name__=="__main__":
+	grid = sys.argv[1]
+	grid = change_grid(grid)
+	visualize(grid)
+	print('\n')
+	start = time.clock()
+	sudoku_solver(grid)
+	end = time.clock()
+	print("time elapse = ", end-start)
 
 
 
-
-def eliminate(grid):
-	"""
-	Given a grid, eliminate any infeasbile candidates that could fill up each 
-	entry, determined by examining the corresponding row, column, and square. 
-	Only eliminate when one of the entries in either row, column, or the square 
-	is completely determined
-	"""
-	return
-
-def fib(max):
-	a,b=0,1
-	while a<max:
-		yield a
-		a, b, = b, a+b
-
-a = fib(5)
-print len(a)
